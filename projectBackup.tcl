@@ -6,7 +6,7 @@
 set dirCloud [list "C:/Users/SemperAnte/Dropbox/projects"\
                    "C:/Users/SA/Dropbox/projects"]
 # directories for cleaning
-set dirSearch [list "sim" "quartus"]
+set dirSearch [list "sim" "quartus/acDriver" "quartus/acDriverSoCKit" "quartus/acDriverDE1SoC"]
 # exclude extensions
 set excExt [list "sv" "v" "vh" "vhd"\
                  "do" "tcl"\

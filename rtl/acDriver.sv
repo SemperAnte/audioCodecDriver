@@ -5,7 +5,7 @@
 // History:
 //    23.08.2016 - created
 //--------------------------------------------------------------------------------
-// audio codec SSM2603 driver
+// audio codec SSM2603(SoCKit)/WM8731(DE1-SoC) driver
 // audio part + i2c part for configuration
 //
 // audio interface ( sync with acClk )
