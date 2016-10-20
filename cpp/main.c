@@ -26,7 +26,7 @@ int main()
    wm8731I2cInit( ACDRIVER_I2CAVS_BASE, 0x34, 0 );    // device adr - 0011_0100 ( 0x34 )
    // configuration audio codec
    enum { DAC_ZERO = 0, DAC_INTERFACE = 1, DAC_ADC = 2, DAC_SAW = 3, DAC_SINE = 4 };
-   audioCodecConfig( ACDRIVER_ACAVS_BASE, DAC_SAW, DAC_SINE, 1000, 2500 );
+   audioCodecConfig( ACDRIVER_ACAVS_BASE, DAC_INTERFACE, DAC_INTERFACE, 1000, 2500 );
 
    time1 = alt_timestamp();
    printf( "ticks spent = %u\n", ( unsigned int ) ( time1 - time0 ) );

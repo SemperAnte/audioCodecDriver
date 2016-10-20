@@ -17,6 +17,7 @@ vlog     -work work {../rtl/i2cMaster/i2cLine.sv}
 vlog     -work work {../rtl/i2cMaster/i2cAvalon.sv}
 vlog     -work work {../rtl/i2cMaster/i2cControl.sv}
 vlog     -work work {../rtl/i2cMaster/i2cMaster.sv}
+vlog     -work work {../rtl/acSync.sv}
 vlog     -work work {../rtl/acGenerator.sv}
 vlog     -work work {../rtl/acAvalon.sv}
 vlog     -work work {../rtl/acInterface.sv}

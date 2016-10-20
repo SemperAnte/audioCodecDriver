@@ -39,7 +39,7 @@ set_time_format -unit ns -decimal_places 3
 #**************************************************************
 
 create_clock -name {acClk} -period 10.000 -waveform { 0.000 5.000 } [get_ports {acClk}]
-create_clock -name {i2cClk} -period 10.000 -waveform { 0.000 5.000 } [get_ports {i2cClk}]
+create_clock -name {mstClk} -period 10.000 -waveform { 0.000 5.000 } [get_ports {mstClk}]
 
 
 #**************************************************************
@@ -69,13 +69,14 @@ set_input_delay -add_delay  -clock [get_clocks {acClk}]  1.000 [get_ports {acAvs
 set_input_delay -add_delay  -clock [get_clocks {acClk}]  1.000 [get_ports {acAvsWrData[*]}]
 set_input_delay -add_delay  -clock [get_clocks {acClk}]  1.000 [get_ports {acAvsRd}]
 
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {i2cReset}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {i2cAvsAdr[*]}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {i2cAvsWr}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {i2cAvsWrData[*]}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {i2cAvsRd}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {sdat}]
-set_input_delay -add_delay  -clock [get_clocks {i2cClk}]  1.000 [get_ports {sclk}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {mstReset}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {dacAsiData[*]}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {i2cAvsAdr[*]}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {i2cAvsWr}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {i2cAvsWrData[*]}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {i2cAvsRd}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {sdat}]
+set_input_delay -add_delay  -clock [get_clocks {mstClk}]  1.000 [get_ports {sclk}]
 
 #**************************************************************
 # Set Output Delay
@@ -96,15 +97,16 @@ set_false_path -from [get_clocks {acClk}] -to [get_ports {audAdcLrck}]
 set_false_path -from [get_clocks {acClk}] -to [get_ports {audDacLrck}]
 set_false_path -from [get_clocks {acClk}] -to [get_ports {audDacData}]
 set_false_path -from [get_clocks {acClk}] -to [get_ports {audMute}]
-set_false_path -from [get_clocks {acClk}] -to [get_ports {acTick}]
-set_false_path -from [get_clocks {acClk}] -to [get_ports {acAdcDataL[*]}]
-set_false_path -from [get_clocks {acClk}] -to [get_ports {acAdcDataR[*]}]
 set_false_path -from [get_clocks {acClk}] -to [get_ports {acAvsRdData[*]}]
 
-set_false_path -from [get_clocks {i2cClk}] -to [get_ports {i2cAvsRdData[*]}]
-set_false_path -from [get_clocks {i2cClk}] -to [get_ports {i2cInsIrq}]
-set_false_path -from [get_clocks {i2cClk}] -to [get_ports {sdat}]
-set_false_path -from [get_clocks {i2cClk}] -to [get_ports {sclk}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {i2cAvsRdData[*]}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {i2cInsIrq}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {sdat}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {sclk}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {adcAsoValid}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {adcAsoData[*]}]
+set_false_path -from [get_clocks {mstClk}] -to [get_ports {dacAsiRdy}]
+
 
 
 #**************************************************************

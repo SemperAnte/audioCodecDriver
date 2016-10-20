@@ -4,6 +4,8 @@
 // Author:        Shustov Aleksey ( SemperAnte ), semte@semte.ru
 // History:
 //    07.09.2016 - created
+//    20.10.2016 - added synchronizer from acClk to mstClk,
+//                 added avalon ST interfaces for adc/dac data
 //--------------------------------------------------------------------------------
 // audio codec SSM2603 driver
 // audio part + i2c part for configuration
@@ -11,19 +13,22 @@
 // top-level wrapper for qsys automatic signal recognition
 //--------------------------------------------------------------------------------
 module acDriverHw
-   #( parameter string INTERFACE_TYPE = "LEFT-JUSTIFIED",   // "LEFT-JUSTIFIED", "RIGHT-JUSTIFIED", "I2S"
+   #( parameter // i2c 
+                int    CLK_MASTER_FRQ = 50_000_000,         // clk master frequency
+                int    SCLK_I2C_FRQ   = 500_000,            // desired i2c sclk frequency
+                // audio part
+                string INTERFACE_TYPE = "LEFT-JUSTIFIED",   // "LEFT-JUSTIFIED", "RIGHT-JUSTIFIED", "I2S"
                 int    DATA_WDT       = 24,                 // width of adc/dac data, 16, 20, 24, 32
                 int    BCLK_DIVIDER   = 2,                  // relative to mclk, 1, 2, 4, 6, ... or greater even number
-                int    LRCK_DIVIDER   = 128,                // relative to mclk, must be even
-                // i2c 
-                int    CLK_I2C_FRQ    = 50_000_000,         // input clk frequency
-                int    SCLK_I2C_FRQ   = 500_000 )           // desired i2c sclk frequency
-    ( // audio part
+                int    LRCK_DIVIDER   = 128 )               // relative to mclk, must be even
+
+    ( // master clock - i2c part + synchronizer  
+      input logic                              csi_mstClk_clk,
+      input logic                              rsi_mstReset_reset,
+      
+      // audio part
       input logic                              csi_acClk_clk,
       input logic                              rsi_acReset_reset,
-      // i2c part
-      input logic                              csi_i2cClk_clk,
-      input logic                              rsi_i2cReset_reset,
       
       // audio codec control interface for external chip ( sync with acClk )
       output logic                             coe_audMclk,
@@ -34,13 +39,15 @@ module acDriverHw
       output logic                             coe_audDacData,      
       output logic                             coe_audMute,
       
-      // adc/dac audio interface ( sync with acClk )
-      output logic                             coe_acTick,
-      output logic signed [ DATA_WDT - 1 : 0 ] coe_acAdcDataL, // adc data, left channel
-      output logic signed [ DATA_WDT - 1 : 0 ] coe_acAdcDataR, // adc data, right channel
-      input  logic signed [ DATA_WDT - 1 : 0 ] coe_acDacDataL, // dac data, left channel
-      input  logic signed [ DATA_WDT - 1 : 0 ] coe_acDacDataR, // dac data, right channel
-
+      // avalon ST source, adc data ( sync with mstClk )
+      output logic                             aso_adcAso_valid, // when changes from '0' to '1' - adc data is set to output bus
+      output logic    [ 2 * DATA_WDT - 1 : 0 ] aso_adcAso_Data,  // upper DATA_WDT bits - left channel  ( signed )   
+                                                                 // lower DATA_WDT bits - right channel ( signed )
+      // avalon ST sink, dac data ( sync with mstClk )        
+      output logic                             asi_dacAsi_ready, // when changes from '0' to '1' - dac data is latched to internal register
+      input  logic    [ 2 * DATA_WDT - 1 : 0 ] asi_dacAsi_data,  // upper DATA_WDT bits - left channel  ( signed )                                                                 
+                                                                 // lower DATA_WDT bits - right channel ( signed )
+                                                                 
       // avalon MM slave, audio part ( sync with acClk )
       input  logic                  [ 1  : 0 ] avs_acAvs_address,
       input  logic                             avs_acAvs_write,
@@ -62,29 +69,28 @@ module acDriverHw
       inout  wire                              coe_sclk );  
    
    acDriver
-     #( .INTERFACE_TYPE ( INTERFACE_TYPE ),
+     #( .CLK_MASTER_FRQ ( CLK_MASTER_FRQ ),
+        .SCLK_I2C_FRQ   ( SCLK_I2C_FRQ   ),        
+        .INTERFACE_TYPE ( INTERFACE_TYPE ),
         .DATA_WDT       ( DATA_WDT       ),
         .BCLK_DIVIDER   ( BCLK_DIVIDER   ),
-        .LRCK_DIVIDER   ( LRCK_DIVIDER   ),
-        .CLK_I2C_FRQ    ( CLK_I2C_FRQ    ),
-        .SCLK_I2C_FRQ   ( SCLK_I2C_FRQ   ) )
+        .LRCK_DIVIDER   ( LRCK_DIVIDER   ) )
    acDriverInst
-      ( .acClk        ( csi_acClk_clk        ),
+      ( .mstClk       ( csi_mstClk_clk       ), 
+        .mstReset     ( rsi_mstReset_reset   ),
+        .acClk        ( csi_acClk_clk        ),
         .acReset      ( rsi_acReset_reset    ),
-        .i2cClk       ( csi_i2cClk_clk       ),
-        .i2cReset     ( rsi_i2cReset_reset   ),
         .audMclk      ( coe_audMclk          ),
         .audBclk      ( coe_audBclk          ),
         .audAdcLrck   ( coe_audAdcLrck       ),
         .audAdcData   ( coe_audAdcData       ),
-        .audDacLrck   ( coe_audDacLrck       ),
-        .audDacData   ( coe_audDacData       ),
-        .audMute      ( coe_audMute          ),
-        .acTick       ( coe_acTick           ),
-        .acAdcDataL   ( coe_acAdcDataL       ),
-        .acAdcDataR   ( coe_acAdcDataR       ),
-        .acDacDataL   ( coe_acDacDataL       ),
-        .acDacDataR   ( coe_acDacDataR       ),
+        .audDacLrck   ( coe_audDacLrck       ),  
+        .audDacData   ( coe_audDacData       ),  
+        .audMute      ( coe_audMute          ),                
+        .adcAsoValid  ( aso_adcAso_valid     ),              
+        .adcAsoData   ( aso_adcAso_Data      ),
+        .dacAsiRdy    ( asi_dacAsi_ready     ), 
+        .dacAsiData   ( asi_dacAsi_data      ),
         .acAvsAdr     ( avs_acAvs_address    ),
         .acAvsWr      ( avs_acAvs_write      ),
         .acAvsWrData  ( avs_acAvs_writedata  ),

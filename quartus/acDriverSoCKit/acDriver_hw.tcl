@@ -225,8 +225,8 @@ set_interface_property audioInterface SVD_ADDRESS_GROUP ""
 add_interface_port audioInterface coe_acTick acTick Output 1
 add_interface_port audioInterface coe_acAdcDataL acAdcDataL Output DATA_WDT
 add_interface_port audioInterface coe_acAdcDataR acAdcDataR Output DATA_WDT
-add_interface_port audioInterface coe_acDacDataL acDacdataL Input DATA_WDT
-add_interface_port audioInterface coe_acDacDataR acDacdataR Input DATA_WDT
+add_interface_port audioInterface coe_acDacDataL acDacDataL Input DATA_WDT
+add_interface_port audioInterface coe_acDacDataR acDacDataR Input DATA_WDT
 
 
 # 
