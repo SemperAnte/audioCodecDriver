@@ -40,7 +40,7 @@ alt_u8 ssm2603I2cInit( alt_u32 baseAdr,       // base module address
                    { 0x06, 0x000 } }; // 0_0000_0000, power on everithing
 
    alt_u8  err;
-   alt_u16 readData;
+   alt_u16 rdData;
    
    int attNum; // attempt number, for loop
    int cmdNum; // command number, for loop
@@ -72,10 +72,10 @@ alt_u8 ssm2603I2cInit( alt_u32 baseAdr,       // base module address
          // read data
          if ( infoLevel )
             printf( "\tread from register 0x%02X : ", cmdData[ cmdNum ].regAdr );
-         err = codecI2cRead( baseAdr, devAdr, cmdData[ cmdNum ].regAdr, &readData );
+         err = codecI2cRead( baseAdr, devAdr, cmdData[ cmdNum ].regAdr, &rdData );
          if ( !err ) {
             if ( infoLevel )
-               printf( "data 0x%03X\n", readData );
+               printf( "data 0x%03X\n", rdData );
          } else {
             if ( infoLevel )
                printf( "error 0x%02X\n", err );
@@ -85,7 +85,7 @@ alt_u8 ssm2603I2cInit( alt_u32 baseAdr,       // base module address
          // compare data
          if ( infoLevel )
             printf( "\tcompare write/read data : " );
-         if ( cmdData[ cmdNum ].regData == readData ) {
+         if ( cmdData[ cmdNum ].regData == rdData ) {
             if ( infoLevel )
                printf( "ok\n" );
             err = 0x00;
@@ -110,7 +110,7 @@ alt_u8 ssm2603I2cInit( alt_u32 baseAdr,       // base module address
    return err;
 }
 
-// fully initialization ssm2603 via I2C ( only write )
+// fully initialization wm8731 via I2C ( only write )
 alt_u8 wm8731I2cInit( alt_u32 baseAdr,       // base module address
                       alt_u8  devAdr,        // device address
                       alt_u8  infoLevel )    // info level ( 0, 1 - additional debug info )
@@ -274,22 +274,85 @@ alt_u8 audioCodecConfig( alt_u32 baseAdr,      // base module address
                          alt_u8  dacSourceL,   // source type data for dac, left
                          alt_u8  dacSourceR,   // source type data for dac, right
                          alt_u16 dacFrqL,      // frequency for saw/sine mode, left
-                         alt_u16 dacFrqR )     // frequency for saw/sine mode, right
+                         alt_u16 dacFrqR,      // frequency for saw/sine mode, right
+                         float   Fs,           // sampling frequency
+                         alt_u8  infoLevel )   // info level ( 0, 1 - additional debug info )
 {
    printf( "Configuration audio codec ... " );
+
+   alt_u8  err = 0x00;
+   alt_u16 wrData;
+   alt_u16 rdData;
 
    // soft reset to default
    IOWR_16DIRECT( baseAdr, 0, 0x0001 );
    // module is enabled, interrupt is disabled
    IOWR_16DIRECT( baseAdr, 0, 0x8000 );
    // source type
-   IOWR_16DIRECT( baseAdr, 2, ( dacSourceR << 4 ) | dacSourceL  );
+   wrData = ( dacSourceR << 4 ) | dacSourceL;
+
+   // source
+   IOWR_16DIRECT( baseAdr, 2, wrData );
+   rdData = IORD_16DIRECT( baseAdr, 2 );
+
+   // compare data
+   if ( infoLevel ) {
+      printf( "\n\twrite audio source type - left/right channels: 0x%02X\n", wrData );
+      printf( "\tread audio source type  - left/right channels : 0x%02x\n", rdData );
+      printf( "\tcompare write/read data : " );
+   }
+   if ( wrData == rdData ) {
+      if ( infoLevel )
+         printf( "ok\n" );
+   } else {
+      if ( infoLevel )
+         printf( "error\n" );
+      err = 0x01;
+   }
+
    // frq L
-   IOWR_16DIRECT( baseAdr, 4, ( alt_u16 ) ( ( float ) dacFrqL / 96000.0 * 65536.0 ) );
+   wrData = ( alt_u16 ) ( ( float ) dacFrqL / Fs * 65536.0 );
+   IOWR_16DIRECT( baseAdr, 4, wrData );
+   rdData = IORD_16DIRECT( baseAdr, 4 );
+   // compare data
+   if ( infoLevel ) {
+      printf( "\twrite frequency - left  channel : %0u Hz ( %0u )\n", dacFrqL, wrData );
+      printf( "\tread frequency  - left  channel : %0u\n", rdData );
+      printf( "\tcompare write/read data : " );
+   }
+   if ( wrData == rdData ) {
+      if ( infoLevel )
+         printf( "ok\n" );
+   } else {
+      if ( infoLevel )
+         printf( "error\n" );
+      err = 0x01;
+   }
+
+
    // frq R
-   IOWR_16DIRECT( baseAdr, 6, ( alt_u16 ) ( ( float ) dacFrqR / 96000.0 * 65536.0 ) );
+   wrData = ( alt_u16 ) ( ( float ) dacFrqR / Fs * 65536.0 );
+   IOWR_16DIRECT( baseAdr, 6, wrData );
+   rdData = IORD_16DIRECT( baseAdr, 6 );
+   // compare data
+   if ( infoLevel ) {
+      printf( "\twrite frequency - right channel : %0u Hz ( %0u )\n", dacFrqR, wrData );
+      printf( "\tread frequency  - right channel : %0u\n", rdData );
+      printf( "\tcompare write/read data : " );
+   }
+   if ( wrData == rdData ) {
+      if ( infoLevel )
+         printf( "ok\n" );
+   } else {
+      if ( infoLevel )
+         printf( "error\n" );
+      err = 0x01;
+   }
 
-   printf( "done\n" );
+   if ( !err )
+      printf( "done\n" );
+   else
+      printf( "failed\n" );
 
-   return 0;
+   return err;
 }

@@ -38,15 +38,17 @@ module acDriverHw
       output logic                             coe_audDacLrck,
       output logic                             coe_audDacData,      
       output logic                             coe_audMute,
+      // avalon ST source, adc data ( sync with mstClk ), left / right channels
+      output logic                             aso_adcL_valid, // when changes from '0' to '1' - adc data is set to output bus
+      output logic signed [ DATA_WDT - 1 : 0 ] aso_adcL_data,    
+      output logic                             aso_adcR_valid,
+      output logic signed [ DATA_WDT - 1 : 0 ] aso_adcR_data,      
       
-      // avalon ST source, adc data ( sync with mstClk )
-      output logic                             aso_adcAso_valid, // when changes from '0' to '1' - adc data is set to output bus
-      output logic    [ 2 * DATA_WDT - 1 : 0 ] aso_adcAso_Data,  // upper DATA_WDT bits - left channel  ( signed )   
-                                                                 // lower DATA_WDT bits - right channel ( signed )
-      // avalon ST sink, dac data ( sync with mstClk )        
-      output logic                             asi_dacAsi_ready, // when changes from '0' to '1' - dac data is latched to internal register
-      input  logic    [ 2 * DATA_WDT - 1 : 0 ] asi_dacAsi_data,  // upper DATA_WDT bits - left channel  ( signed )                                                                 
-                                                                 // lower DATA_WDT bits - right channel ( signed )
+      // avalon ST sink, dac data ( sync with mstClk ), left / right channels
+      output logic                             asi_dacL_ready,   // when changes from '0' to '1' - dac data is latched to internal register
+      input  logic signed [ DATA_WDT - 1 : 0 ] asi_dacL_data,
+      output logic                             asi_dacR_ready,  
+      input  logic signed [ DATA_WDT - 1 : 0 ] asi_dacR_data, 
                                                                  
       // avalon MM slave, audio part ( sync with acClk )
       input  logic                  [ 1  : 0 ] avs_acAvs_address,
@@ -84,13 +86,17 @@ module acDriverHw
         .audBclk      ( coe_audBclk          ),
         .audAdcLrck   ( coe_audAdcLrck       ),
         .audAdcData   ( coe_audAdcData       ),
-        .audDacLrck   ( coe_audDacLrck       ),  
+        .audDacLrck   ( coe_audDacLrck       ),   
         .audDacData   ( coe_audDacData       ),  
         .audMute      ( coe_audMute          ),                
-        .adcAsoValid  ( aso_adcAso_valid     ),              
-        .adcAsoData   ( aso_adcAso_Data      ),
-        .dacAsiRdy    ( asi_dacAsi_ready     ), 
-        .dacAsiData   ( asi_dacAsi_data      ),
+        .adcLAsoValid ( aso_adcL_valid       ),
+        .adcLAsoData  ( aso_adcL_data        ),
+        .adcRAsoValid ( aso_adcR_valid       ),
+        .adcRAsoData  ( aso_adcR_data        ),
+        .dacLAsiRdy   ( asi_dacL_ready       ),
+        .dacLAsiData  ( asi_dacL_data        ),
+        .dacRAsiRdy   ( asi_dacR_ready       ),
+        .dacRAsiData  ( asi_dacR_data        ),
         .acAvsAdr     ( avs_acAvs_address    ),
         .acAvsWr      ( avs_acAvs_write      ),
         .acAvsWrData  ( avs_acAvs_writedata  ),

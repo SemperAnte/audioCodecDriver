@@ -97,6 +97,14 @@
          type = "String";
       }
    }
+   element acDriverQsys
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element audioPll
    {
       datum _sortIndex
@@ -796,8 +804,13 @@
  <connection
    kind="avalon_streaming"
    version="15.1"
-   start="acDriver.adcAso"
-   end="acDriver.dacAsi" />
+   start="acDriver.adcL"
+   end="acDriver.dacL" />
+ <connection
+   kind="avalon_streaming"
+   version="15.1"
+   start="acDriver.adcR"
+   end="acDriver.dacR" />
  <connection kind="clock" version="15.1" start="clk.clk" end="cpu.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="jtagUart.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="sysid.clk" />

@@ -45,4 +45,6 @@ alt_u8 audioCodecConfig( alt_u32 baseAdr,      // base module address
                          alt_u8  dacSourceL,   // source type data for dac, left
                          alt_u8  dacSourceR,   // source type data for dac, right
                          alt_u16 dacFrqL,      // frequency for saw/sine mode, left
-                         alt_u16 dacFrqR );    // frequency for saw/sine mode, right
+                         alt_u16 dacFrqR,      // frequency for saw/sine mode, right
+                         float   Fs,           // sampling frequency
+                         alt_u8  infoLevel );  // info level ( 0, 1 - additional debug info )

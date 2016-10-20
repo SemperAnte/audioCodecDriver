@@ -10,8 +10,8 @@
 // audio codec SSM2603(SoCKit)/WM8731(DE1-SoC) driver
 // audio part + i2c part for configuration
 //
-// avalon ST source - for adc data
-// avalon ST sink   - for dac data
+// avalon ST source - for adc data ( left / right )
+// avalon ST sink   - for dac data ( left / right )
 //
 // internal generator for testing
 //--------------------------------------------------------------------------------
@@ -25,48 +25,52 @@ module acDriver
                 int    BCLK_DIVIDER   = 2,                  // relative to mclk, 1, 2, 4, 6, ... or greater even number
                 int    LRCK_DIVIDER   = 128 )               // relative to mclk, must be even
     ( // master clock - i2c part + synchronizer                  
-      input  logic                          mstClk,
-      input  logic                          mstReset,
-      // audio part                         
-      input  logic                          acClk,      
-      input  logic                          acReset,
+      input  logic                             mstClk,
+      input  logic                             mstReset,
+      // audio part                            
+      input  logic                             acClk,      
+      input  logic                             acReset,
       
       // audio codec control interface for external chip ( sync with acClk )
-      output logic                          audMclk,
-      output logic                          audBclk,
-      output logic                          audAdcLrck,
-      input  logic                          audAdcData,
-      output logic                          audDacLrck,
-      output logic                          audDacData,      
-      output logic                          audMute,
+      output logic                             audMclk,
+      output logic                             audBclk,
+      output logic                             audAdcLrck,
+      input  logic                             audAdcData,
+      output logic                             audDacLrck,
+      output logic                             audDacData,      
+      output logic                             audMute,
       
-      // avalon ST source, adc data ( sync with mstClk )
-      output logic                          adcAsoValid, // when changes from '0' to '1' - adc data is set to output bus
-      output logic [ 2 * DATA_WDT - 1 : 0 ] adcAsoData,  // upper DATA_WDT bits - left channel  ( signed )   
-                                                         // lower DATA_WDT bits - right channel ( signed )
-      // avalon ST sink, dac data ( sync with mstClk )
-      output logic                          dacAsiRdy,   // when changes from '0' to '1' - dac data is latched to internal register
-      input  logic [ 2 * DATA_WDT - 1 : 0 ] dacAsiData,  // upper DATA_WDT bits - left channel  ( signed )                                                                 
-                                                         // lower DATA_WDT bits - right channel ( signed )
+      // avalon ST source, adc data ( sync with mstClk ), left / right channels
+      output logic                             adcLAsoValid, // when changes from '0' to '1' - adc data is set to output bus
+      output logic signed [ DATA_WDT - 1 : 0 ] adcLAsoData,    
+      output logic                             adcRAsoValid,
+      output logic signed [ DATA_WDT - 1 : 0 ] adcRAsoData,      
+      
+      // avalon ST sink, dac data ( sync with mstClk ), left / right channels
+      output logic                             dacLAsiRdy,   // when changes from '0' to '1' - dac data is latched to internal register
+      input  logic signed [ DATA_WDT - 1 : 0 ] dacLAsiData,
+      output logic                             dacRAsiRdy,  
+      input  logic signed [ DATA_WDT - 1 : 0 ] dacRAsiData, 
+      
       // avalon MM slave, audio part ( sync with acClk )
-      input  logic               [ 1  : 0 ] acAvsAdr,
-      input  logic                          acAvsWr,
-      input  logic               [ 15 : 0 ] acAvsWrData,
-      input  logic                          acAvsRd,
-      output logic               [ 15 : 0 ] acAvsRdData,
+      input  logic                  [ 1  : 0 ] acAvsAdr,
+      input  logic                             acAvsWr,
+      input  logic                  [ 15 : 0 ] acAvsWrData,
+      input  logic                             acAvsRd,
+      output logic                  [ 15 : 0 ] acAvsRdData,
                    
       // avalon MM slave, i2c part ( sync with mstClk )
-      input  logic                [ 1 : 0 ] i2cAvsAdr,
-      input  logic                          i2cAvsWr,
-      input  logic                [ 7 : 0 ] i2cAvsWrData,
-      input  logic                          i2cAvsRd,
-      output logic                [ 7 : 0 ] i2cAvsRdData,
+      input  logic                   [ 1 : 0 ] i2cAvsAdr,
+      input  logic                             i2cAvsWr,
+      input  logic                   [ 7 : 0 ] i2cAvsWrData,
+      input  logic                             i2cAvsRd,
+      output logic                   [ 7 : 0 ] i2cAvsRdData,
       // avalon interrupt ( sync with mstClk )
-      output logic                          i2cInsIrq,
+      output logic                             i2cInsIrq,
                    
       // i2c lines ( sync with mstClk )             
-      inout  wire                           sdat,
-      inout  wire                           sclk );  
+      inout  wire                              sdat,
+      inout  wire                              sclk );  
    
    // sync with acClk
    logic                             acTick;
@@ -107,17 +111,21 @@ module acDriver
      #( .SYNC_DEPTH ( 3        ),
         .DATA_WDT   ( DATA_WDT ) )
    acSyncInst
-      ( .clk         ( mstClk      ),   
-        .reset       ( mstReset    ),
-        .adcAsoValid ( adcAsoValid ),
-        .adcAsoData  ( adcAsoData  ),
-        .dacAsiRdy   ( dacAsiRdy   ),
-        .dacAsiData  ( dacAsiData  ), 
-        .acTick      ( acTick      ),    
-        .acAdcDataL  ( acAdcDataL  ),
-        .acAdcDataR  ( acAdcDataR  ),
-        .acDacDataL  ( acDacDataL  ),
-        .acDacDataR  ( acDacDataR  ) );
+      ( .clk          ( mstClk       ),   
+        .reset        ( mstReset     ),
+        .adcLAsoValid ( adcLAsoValid ),
+        .adcLAsoData  ( adcLAsoData  ),
+        .adcRAsoValid ( adcRAsoValid ),
+        .adcRAsoData  ( adcRAsoData  ),
+        .dacLAsiRdy   ( dacLAsiRdy   ),
+        .dacLAsiData  ( dacLAsiData  ), 
+        .dacRAsiRdy   ( dacRAsiRdy   ),
+        .dacRAsiData  ( dacRAsiData  ), 
+        .acTick       ( acTick       ),    
+        .acAdcDataL   ( acAdcDataL   ),
+        .acAdcDataR   ( acAdcDataR   ),
+        .acDacDataL   ( acDacDataL   ),
+        .acDacDataR   ( acDacDataR   ) );
         
    // i2c part, from rtllib
    i2cMaster

@@ -223,7 +223,7 @@
  <parameter name="hideFromIPCatalog" value="false" />
  <parameter name="lockedInterfaceDefinition" value="" />
  <parameter name="maxAdditionalLatency" value="1" />
- <parameter name="projectName" value="acDriverBoard.qpf" />
+ <parameter name="projectName" value="acDriverSoCKit.qpf" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="0" />
  <parameter name="testBenchDutName" value="" />
@@ -231,11 +231,7 @@
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="audiocodeccontrol" internal="acDriver.audioCodecControl" />
- <interface
-   name="audiointerface"
-   internal="acDriver.audioInterface"
-   type="conduit"
-   dir="end" />
+ <interface name="audiointerface" internal="acDriver.audioInterface" />
  <interface name="clk" internal="clk.clk_in" type="clock" dir="end" />
  <interface
    name="codeccontrol"
@@ -250,9 +246,8 @@
  <interface name="reset" internal="clk.clk_in_reset" type="reset" dir="end" />
  <module name="acDriver" kind="acDriver" version="1.0" enabled="1">
   <parameter name="BCLK_DIVIDER" value="2" />
-  <parameter name="CLK_I2C_FRQ" value="50000000" />
+  <parameter name="CLK_MASTER_FRQ" value="50000000" />
   <parameter name="DATA_WDT" value="24" />
-  <parameter name="INTERFACE_TYPE" value="LEFT-JUSTIFIED" />
   <parameter name="LRCK_DIVIDER" value="128" />
   <parameter name="SCLK_I2C_FRQ" value="500000" />
  </module>
@@ -790,12 +785,22 @@
   <parameter name="baseAddress" value="0x00010000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
+ <connection
+   kind="avalon_streaming"
+   version="15.1"
+   start="acDriver.adcL"
+   end="acDriver.dacL" />
+ <connection
+   kind="avalon_streaming"
+   version="15.1"
+   start="acDriver.adcR"
+   end="acDriver.dacR" />
  <connection kind="clock" version="15.1" start="clk.clk" end="cpu.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="jtagUart.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="sysid.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="timestampTimer.clk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="mem.clk1" />
- <connection kind="clock" version="15.1" start="clk.clk" end="acDriver.i2cClk" />
+ <connection kind="clock" version="15.1" start="clk.clk" end="acDriver.mstClk" />
  <connection kind="clock" version="15.1" start="clk.clk" end="audioPll.refclk" />
  <connection
    kind="clock"
@@ -824,7 +829,7 @@
    kind="reset"
    version="15.1"
    start="clk.clk_reset"
-   end="acDriver.i2cReset" />
+   end="acDriver.mstReset" />
  <connection
    kind="reset"
    version="15.1"
@@ -852,7 +857,7 @@
    kind="reset"
    version="15.1"
    start="cpu.debug_reset_request"
-   end="acDriver.i2cReset" />
+   end="acDriver.mstReset" />
  <connection
    kind="reset"
    version="15.1"
